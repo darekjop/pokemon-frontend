@@ -8,7 +8,7 @@ import axios from 'axios';
 
 
 axios.defaults.headers.common['Authorization'] = localStorage.getItem('token');
- axios.defaults.baseURL = 'https://shrouded-woodland-17864.herokuapp.com/';
+axios.defaults.baseURL = 'https://shrouded-woodland-17864.herokuapp.com/';
 //axios.defaults.baseURL = 'http://localhost:3000/';
 
 

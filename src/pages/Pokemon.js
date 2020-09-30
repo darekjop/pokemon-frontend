@@ -4,6 +4,7 @@ import { NotificationManager} from 'react-notifications';
 import {Redirect} from 'react-router-dom';
 import axios from 'axios';
 
+
 export default class Pokemon extends Component{
     state = {};
       
@@ -13,6 +14,7 @@ export default class Pokemon extends Component{
             pokemon:false,
             pokemonAll:false,
             loading:false,
+            count:0,
             searchText:"",
             user:   JSON.parse(localStorage.getItem('user') ),
             config : {
@@ -25,17 +27,29 @@ export default class Pokemon extends Component{
     }
   async  componentDidMount() {    
       this.state.loading=true;
+      
       try{      
        
         await axios.get('api/pokemon/pokedex',this.state.config).then(
-            res => {                
-                this.setState({
-                    pokemon:res.data,
-                    pokemonAll:res.data,
-                    loading:false
-                })
+            res => {  
+                if(res.data){
+                    let count = 0;  
+                    
+                    const pokemonsCn = res.data.filter(user => user.isUser == true);                
+                    if(pokemonsCn) count = pokemonsCn.length;
+                    
+                    this.setState({
+                        pokemon:res.data,
+                        pokemonAll:res.data,
+                        loading:false,
+                         count:count
+                    })
+               }else{
+                this.createNotification('error','sorry there was error' ) 
+               }
             },
-            err => {                
+            err => {      
+                this.createNotification('error','sorry there was error' )           
                 console.log(err);
             }
         )
@@ -50,15 +64,21 @@ export default class Pokemon extends Component{
              axios({ method: 'post', url:'api/pokemon/add/'+id, headers: { 'Authorization': localStorage.getItem('token') } }            
              ).then(
                  res => {
-                     
-                     if(res.data){                        
+                    if(res.data && res.data.error){
+                        this.createNotification('warning',res.data.error ) 
+                    }else if(res.data ){
+                                          
                         this.createNotification('success','Pokemon added!' );                                                               
                         const index = this.state.pokemon.findIndex(a => a.id === id);
                         this.state.pokemon[index].isUser = true;
+                        this.state.count = this.state.count + 1
                         this.forceUpdate();                                         
                      this.setState({
                          pokemon:this.state.pokemon
                      })
+                    
+                    }else{
+                        this.createNotification('error','sorry there was error' )                                            
                     }
                  },
                  err => {
@@ -80,6 +100,7 @@ export default class Pokemon extends Component{
                         this.createNotification('success','Pokemon deleted!' );                                                                                       
                         const index = this.state.pokemon.findIndex(a => a.id === id);
                         this.state.pokemon[index].isUser = false;
+                        this.state.count = this.state.count - 1;
                         this.forceUpdate();                    
                      
                      this.setState({
@@ -124,7 +145,7 @@ export default class Pokemon extends Component{
     } 
 
     myPokemon (e) {        
-    this.state.loading=true;
+    this.state.loading = true;
     const myPokemenData =(e.target.dataset.action =='show-my') ? (this.state.pokemon.filter(user => user.isUser == true)) : this.state.pokemonAll;                                
     this.setState({
         pokemon:myPokemenData,
@@ -182,7 +203,7 @@ export default class Pokemon extends Component{
             return <Redirect push to="/"/> 
         }
        
-        let nav = <NavLogin show={this.state.mypokemon} onClickSort={this.myPokemon.bind(this)} searchPokemon={this.handleChange.bind(this)} filterPokemon={this.sortPokemons.bind(this)} />
+        let nav = <NavLogin show={this.state.mypokemon} countPokemon={this.state.count} onClickSort={this.myPokemon.bind(this)} searchPokemon={this.handleChange.bind(this)} filterPokemon={this.sortPokemons.bind(this)} />
 
         if(this.state.loading){
             return (                
@@ -198,7 +219,8 @@ export default class Pokemon extends Component{
                 let baseArray=[];                                                
                 Object.entries(pokemon.base).map(([k,v])=>(                    
                     baseArray.push(<div>{k}&nbsp;{v}</div>)
-                ))                          
+                ))                   
+                
                 items.push(                
                 <div className="col-md-4 col-lg-4 col-sm-4 col-xs-12" >  
                    <div className={`card ${pokemon.isUser ? "card-user" : "normal"}`} >

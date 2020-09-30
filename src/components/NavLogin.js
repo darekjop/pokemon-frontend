@@ -37,7 +37,7 @@ export default class NavLogin extends Component {
         {this.props.show=='show-my' ? 
             <button  class="btn btn-danger mypokemon" data-action="show-all" onClick={this.props.onClickSort.bind(this)}>Show All </button>                                                               
         : (
-            <button  class="btn btn-danger mypokemon" data-action="show-my" onClick={this.props.onClickSort.bind(this)}>My pokemon</button>                                                               
+            <button  class="btn btn-danger mypokemon" data-action="show-my" onClick={this.props.onClickSort.bind(this)}>My pokemon ({this.props.countPokemon})</button>                                                               
         )
         }
         </div>
